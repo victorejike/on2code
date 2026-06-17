@@ -1,0 +1,53 @@
+version: '3.9'
+services:
+  backend:
+    build:
+      context: ../backend
+    ports:
+      - '4000:4000'
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/on2code
+      - REDIS_URL=redis://cache:6379
+      - JWT_SECRET=supersecret
+      - JWT_REFRESH_SECRET=refreshsecret
+      - S3_ENDPOINT=http://minio:9000
+      - S3_BUCKET=on2code
+    depends_on:
+      - db
+      - cache
+      - minio
+  frontend:
+    build:
+      context: ../frontend
+    ports:
+      - '3000:3000'
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
+    depends_on:
+      - backend
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: on2code
+    volumes:
+      - db-data:/var/lib/postgresql/data
+  cache:
+    image: redis:7
+    restart: always
+  minio:
+    image: minio/minio
+    command: server /data
+    ports:
+      - '9000:9000'
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio-data:/data
+volumes:
+  db-data:
+  minio-data:

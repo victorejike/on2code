@@ -1,0 +1,259 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  passwordHash   String
+  name           String?
+  role           Role      @default(STUDENT)
+  isVerified     Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  enrollments    Enrollment[]
+  submissions    Submission[]
+  quizAttempts   QuizAttempt[]
+  progress       Progress[]
+  certificates   Certificate[]
+  comments       Comment[]
+  auditLogs      AuditLog[] @relation("actor")
+}
+
+enum Role {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+model Course {
+  id           String     @id @default(uuid())
+  slug         String     @unique
+  title        String
+  subtitle     String?
+  description  String?
+  level        CourseLevel @default(BEGINNER)
+  status       CourseStatus @default(DRAFT)
+  publishedAt  DateTime?
+  coverImage   String?
+  instructor   User?      @relation(fields: [instructorId], references: [id])
+  instructorId String?
+  modules      Module[]
+  enrollments  Enrollment[]
+  certificates Certificate[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Module {
+  id          String    @id @default(uuid())
+  course      Course    @relation(fields: [courseId], references: [id])
+  courseId    String
+  title       String
+  description String?
+  position    Int       @default(0)
+  lessons     Lesson[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Lesson {
+  id          String    @id @default(uuid())
+  module      Module    @relation(fields: [moduleId], references: [id])
+  moduleId    String
+  title       String
+  summary     String?
+  videoUrl    String?
+  transcript  String?
+  notes       String?
+  position    Int       @default(0)
+  assignments Assignment[]
+  quizzes     Quiz[]
+  comments    Comment[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Assignment {
+  id            String      @id @default(uuid())
+  lesson        Lesson      @relation(fields: [lessonId], references: [id])
+  lessonId      String
+  title         String
+  description   String?
+  difficulty    Difficulty  @default(MEDIUM)
+  languages     String[]
+  starterCode   Json
+  gradingPolicy Json
+  maxScore      Int         @default(100)
+  passingScore  Int         @default(70)
+  submissions   Submission[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Submission {
+  id             String    @id @default(uuid())
+  assignment     Assignment @relation(fields: [assignmentId], references: [id])
+  assignmentId   String
+  user           User      @relation(fields: [userId], references: [id])
+  userId         String
+  language       String
+  code           String
+  status         SubmissionStatus @default(PENDING)
+  score          Int?
+  output         Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+enum SubmissionStatus {
+  PENDING
+  RUNNING
+  PASSED
+  FAILED
+  ERROR
+}
+
+model Quiz {
+  id          String       @id @default(uuid())
+  lesson      Lesson       @relation(fields: [lessonId], references: [id])
+  lessonId    String
+  title       String
+  description String?
+  questions   Question[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Question {
+  id         String    @id @default(uuid())
+  quiz       Quiz      @relation(fields: [quizId], references: [id])
+  quizId     String
+  type       QuestionType
+  prompt     String
+  options    QuestionOption[]
+  answer     String?
+  score      Int       @default(1)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  FILL_IN_THE_BLANK
+}
+
+model QuestionOption {
+  id         String   @id @default(uuid())
+  question   Question @relation(fields: [questionId], references: [id])
+  questionId String
+  label      String
+  value      String
+  isCorrect  Boolean  @default(false)
+}
+
+model QuizAttempt {
+  id         String   @id @default(uuid())
+  quiz       Quiz     @relation(fields: [quizId], references: [id])
+  quizId     String
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  score      Int
+  completed  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Progress {
+  id          String   @id @default(uuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  course      Course   @relation(fields: [courseId], references: [id])
+  courseId    String
+  module      Module?  @relation(fields: [moduleId], references: [id])
+  moduleId    String?
+  lesson      Lesson?  @relation(fields: [lessonId], references: [id])
+  lessonId    String?
+  completed   Boolean  @default(false)
+  progress    Float    @default(0)
+  updatedAt   DateTime @updatedAt
+}
+
+model Certificate {
+  id             String   @id @default(uuid())
+  user           User     @relation(fields: [userId], references: [id])
+  userId         String
+  course         Course   @relation(fields: [courseId], references: [id])
+  courseId       String
+  certificateUrl String
+  issuedAt       DateTime @default(now())
+}
+
+model Enrollment {
+  id        String  @id @default(uuid())
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String
+  course    Course  @relation(fields: [courseId], references: [id])
+  courseId  String
+  enrolledAt DateTime @default(now())
+}
+
+model Comment {
+  id          String    @id @default(uuid())
+  author      User      @relation(fields: [authorId], references: [id])
+  authorId    String
+  lesson      Lesson?   @relation(fields: [lessonId], references: [id])
+  lessonId    String?
+  parentId    String?
+  content     String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  replies     Comment[] @relation("CommentReplies")
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  title       String
+  message     String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  actor        User?    @relation("actor", fields: [actorId], references: [id])
+  actorId      String?
+  action       String
+  resourceType String
+  resourceId   String?
+  ipAddress    String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+}
