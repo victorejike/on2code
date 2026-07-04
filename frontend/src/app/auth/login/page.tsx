@@ -1,72 +1,114 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
-  const [userEmail, setUserEmail] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setMessage('Signing in...');
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        setMessage(error?.message || 'Invalid credentials.');
+      if (!res.ok) {
+        const err = await res.json();
+        setMessage(err?.message || 'Invalid email or password.');
         return;
       }
 
-      const data = await response.json();
-      setUserEmail(data.user?.email || '');
-      setMessage('Signed in successfully.');
+      const data = await res.json();
       window.localStorage.setItem('on2code_token', data.accessToken);
-    } catch (error) {
-      setMessage('Unable to reach authentication service.');
+      window.location.href = '/dashboard';
+    } catch {
+      setMessage('Unable to reach the server. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-16 text-slate-100">
-      <div className="mx-auto max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-10 shadow-xl shadow-slate-950/40">
-        <h1 className="text-3xl font-semibold">Student login</h1>
-        <p className="mt-3 text-slate-400">Access your On2Code dashboard and continue your learning path.</p>
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-indigo-500"
-              required
-            />
+    <div className="min-h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md space-y-6">
+        {/* Card */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 space-y-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-extrabold text-gray-900">Sign in to On2Code</h1>
+            <p className="mt-1 text-sm text-gray-500">Welcome back! Continue your learning journey.</p>
           </div>
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-indigo-500"
-              required
-            />
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Email address</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-[#0077cc] focus:ring-2 focus:ring-[#0077cc]/20"
+              />
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-semibold text-gray-700">Password</label>
+                <a href="#" className="text-xs text-[#0077cc] hover:underline">Forgot password?</a>
+              </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-[#0077cc] focus:ring-2 focus:ring-[#0077cc]/20"
+              />
+            </div>
+
+            {message && (
+              <p className="rounded-lg bg-red-50 border border-red-200 px-4 py-2.5 text-sm text-red-700">
+                {message}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-full bg-[#0077cc] py-3 text-sm font-bold text-white hover:bg-[#005fa3] transition disabled:opacity-60"
+            >
+              {loading ? 'Signing in…' : 'Sign in'}
+            </button>
+          </form>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+            <div className="relative flex justify-center text-xs text-gray-400 bg-white px-2">or</div>
           </div>
-          <button type="submit" className="w-full rounded-2xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400">
-            Sign in
-          </button>
-        </form>
-        {message && <p className="mt-6 text-sm text-slate-300">{message}</p>}
-        {userEmail && <p className="mt-2 text-sm text-emerald-300">Welcome back, {userEmail}.</p>}
+
+          <p className="text-center text-sm text-gray-600">
+            Don't have an account?{' '}
+            <Link href="/auth/login" className="font-semibold text-[#0077cc] hover:underline">
+              Register for free
+            </Link>
+          </p>
+        </div>
+
+        {/* Demo hint */}
+        <div className="rounded-xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm text-blue-700">
+          <p className="font-semibold mb-1">Demo credentials</p>
+          <p>Email: <span className="font-mono">student@on2code.com</span></p>
+          <p>Password: <span className="font-mono">password</span></p>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

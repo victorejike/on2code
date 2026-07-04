@@ -1,0 +1,9 @@
+node_modules
+.next
+build
+dist
+*.exe
+.DS_Store
+*.env.local
+backend/backend
+backend/on2code-backend

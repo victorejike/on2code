@@ -1,100 +1,117 @@
 import Link from 'next/link';
 
-export default function HomePage() {
-  return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
-        <div className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-          <div className="space-y-8">
-            <div className="inline-flex rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1 text-sm text-indigo-200">
-              On2Code professional learning paths
-            </div>
-            <div className="space-y-5">
-              <h1 className="text-5xl font-semibold tracking-tight sm:text-6xl">Launch your software career with real, industry-ready projects.</h1>
-              <p className="max-w-2xl text-xl text-slate-400">
-                On2Code delivers online programs built for modern engineers, featuring graded lessons, mentor review, and certificate-ready outcomes.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-4">
-              <Link href="/courses" className="inline-flex items-center justify-center rounded-2xl bg-indigo-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400">
-                Browse programs
-              </Link>
-              <Link href="/auth/login" className="inline-flex items-center justify-center rounded-2xl border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-100 transition hover:bg-slate-800">
-                Sign in
-              </Link>
-            </div>
-          </div>
+const SUBJECTS = ['Computer Science', 'Data Science', 'Web Development', 'Cloud & DevOps', 'Cybersecurity', 'AI & Machine Learning'];
+const COLORS = ['bg-[#a51c30]', 'bg-[#0077cc]', 'bg-[#1a7f5a]', 'bg-[#7c3aed]', 'bg-[#b45309]'];
 
-          <div className="rounded-[2rem] border border-slate-800 bg-slate-900/95 p-8 shadow-2xl shadow-slate-950/40">
-            <div className="space-y-6">
-              <div>
-                <p className="text-sm uppercase tracking-[0.28em] text-emerald-300">On2Code</p>
-                <h2 className="mt-4 text-3xl font-semibold text-white">Career-focused courses for web, backend, and cloud engineering.</h2>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-3xl bg-slate-950/80 p-5">
-                  <p className="text-3xl font-semibold text-white">7,000+</p>
-                  <p className="mt-2 text-sm uppercase tracking-[0.24em] text-slate-400">Learners</p>
-                </div>
-                <div className="rounded-3xl bg-slate-950/80 p-5">
-                  <p className="text-3xl font-semibold text-white">120+</p>
-                  <p className="mt-2 text-sm uppercase tracking-[0.24em] text-slate-400">Hours of live content</p>
-                </div>
-              </div>
-              <div className="rounded-3xl border border-slate-800 bg-slate-950/80 p-5">
-                <p className="text-sm uppercase tracking-[0.28em] text-slate-400">Program highlights</p>
-                <ul className="mt-4 space-y-3 text-slate-300">
-                  <li>• Project-based learning with real-world technical deliverables</li>
-                  <li>• Instant feedback on assignments and progress tracking</li>
-                  <li>• Certificate-ready outcomes for resumes and portfolios</li>
-                </ul>
-              </div>
-            </div>
+type Course = { id: string; slug: string; title: string; subtitle: string; level?: string };
+
+async function getFeaturedCourses(): Promise<Course[]> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/courses`, { cache: 'no-store' });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.courses || []).slice(0, 3);
+  } catch { return []; }
+}
+
+export default async function HomePage() {
+  const courses = await getFeaturedCourses();
+
+  return (
+    <div>
+      {/* Hero */}
+      <section className="bg-[#0077cc] text-white py-20 px-6">
+        <div className="mx-auto max-w-4xl text-center space-y-6">
+          <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight">
+            Learn from the world's best instructors
+          </h1>
+          <p className="text-lg text-blue-100 max-w-2xl mx-auto">
+            Advance your career with On2Code's professional courses, programs, and certifications — built for real-world engineers.
+          </p>
+          <div className="flex max-w-xl mx-auto mt-4">
+            <input type="text" placeholder="What do you want to learn?"
+              className="flex-1 rounded-l-full border-0 px-5 py-3 text-gray-900 text-sm outline-none" />
+            <button className="rounded-r-full bg-[#003d6b] px-6 py-3 text-sm font-semibold text-white hover:bg-[#002a4d] transition">
+              Search
+            </button>
           </div>
         </div>
+      </section>
 
-        <section className="mt-16 grid gap-6 lg:grid-cols-3">
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-xl shadow-slate-950/40">
-            <p className="text-sm uppercase tracking-[0.2em] text-indigo-300">Build real skills</p>
-            <h3 className="mt-4 text-2xl font-semibold text-white">Hands-on roadmaps</h3>
-            <p className="mt-3 text-slate-400">Complete guided pathways that connect theory to product-ready applications.</p>
-          </div>
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-xl shadow-slate-950/40">
-            <p className="text-sm uppercase tracking-[0.2em] text-emerald-300">Verified progress</p>
-            <h3 className="mt-4 text-2xl font-semibold text-white">Assessments + certificates</h3>
-            <p className="mt-3 text-slate-400">Earn credentials through graded assignments, quizzes, and completion milestones.</p>
-          </div>
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-xl shadow-slate-950/40">
-            <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Flexible learning</p>
-            <h3 className="mt-4 text-2xl font-semibold text-white">Study at your pace</h3>
-            <p className="mt-3 text-slate-400">Progress through modules on your own schedule, with support for both self-paced and cohort learning.</p>
-          </div>
-        </section>
+      {/* Subject categories */}
+      <section className="border-b border-gray-200 bg-white px-6 py-5">
+        <div className="mx-auto max-w-7xl flex flex-wrap gap-3">
+          {SUBJECTS.map((s) => (
+            <Link key={s} href="/courses"
+              className="rounded-full border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:border-[#0077cc] hover:text-[#0077cc] transition">
+              {s}
+            </Link>
+          ))}
+        </div>
+      </section>
 
-        <section className="mt-20 rounded-3xl border border-slate-800 bg-slate-900 p-10 shadow-xl shadow-slate-950/40">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-[0.3em] text-indigo-300">Program snapshot</p>
-              <h2 className="mt-3 text-3xl font-semibold text-white">A polished learning experience for developers.</h2>
+      {/* Featured courses — live from API */}
+      <section className="px-6 py-14">
+        <div className="mx-auto max-w-7xl">
+          <h2 className="text-2xl font-bold text-gray-900 mb-8">Featured courses</h2>
+          {courses.length === 0 ? (
+            <p className="text-gray-400 text-sm">Start the backend to see live courses: <code className="bg-gray-100 px-2 py-0.5 rounded">cd backend && go run main.go</code></p>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {courses.map((course, i) => (
+                <Link key={course.id} href={`/courses/${course.slug}`}
+                  className="group rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition overflow-hidden">
+                  <div className={`${COLORS[i % COLORS.length]} h-36 flex items-center justify-center`}>
+                    <span className="text-white text-3xl font-extrabold opacity-30 select-none">On2Code</span>
+                  </div>
+                  <div className="p-5 space-y-2">
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span className="rounded bg-gray-100 px-2 py-0.5 font-medium">Course</span>
+                      <span>{course.level || 'Introductory'}</span>
+                    </div>
+                    <h3 className="font-bold text-gray-900 group-hover:text-[#0077cc] transition leading-snug">{course.title}</h3>
+                    <p className="text-xs text-gray-500 line-clamp-2">{course.subtitle}</p>
+                    <p className="text-xs font-medium text-gray-400">On2Code</p>
+                  </div>
+                </Link>
+              ))}
             </div>
-            <Link href="/courses" className="inline-flex rounded-full border border-indigo-500/40 bg-indigo-500/10 px-5 py-3 text-sm font-semibold text-indigo-100 transition hover:bg-indigo-500/20">
-              View programs
+          )}
+          <div className="mt-8 text-center">
+            <Link href="/courses" className="inline-flex rounded-full border border-[#0077cc] px-6 py-3 text-sm font-semibold text-[#0077cc] hover:bg-[#0077cc] hover:text-white transition">
+              Browse all courses
             </Link>
           </div>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              'Foundations: Web fundamentals',
-              'Backend: APIs and databases',
-              'Cloud: deployment and scaling',
-              'Team skills: Git, testing, CI/CD'
-            ].map((item) => (
-              <div key={item} className="rounded-3xl border border-slate-800 bg-slate-950/80 p-5 text-sm text-slate-300">
-                {item}
-              </div>
-            ))}
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="bg-gray-50 border-y border-gray-200 px-6 py-12">
+        <div className="mx-auto max-w-7xl grid gap-8 sm:grid-cols-3 text-center">
+          {[{ value: '7,000+', label: 'Learners worldwide' }, { value: '120+', label: 'Hours of content' }, { value: '95%', label: 'Completion rate' }].map((s) => (
+            <div key={s.label}>
+              <p className="text-4xl font-extrabold text-[#0077cc]">{s.value}</p>
+              <p className="mt-2 text-sm text-gray-600">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="px-6 py-16 text-center">
+        <div className="mx-auto max-w-2xl space-y-5">
+          <h2 className="text-3xl font-extrabold text-gray-900">Start learning today</h2>
+          <p className="text-gray-600">Join thousands of learners building real skills with On2Code's structured programs.</p>
+          <div className="flex justify-center gap-4 flex-wrap">
+            <Link href="/auth/register" className="rounded-full bg-[#0077cc] px-6 py-3 text-sm font-semibold text-white hover:bg-[#005fa3] transition">
+              Create a free account
+            </Link>
+            <Link href="/courses" className="rounded-full border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 hover:border-gray-400 transition">
+              Explore courses
+            </Link>
           </div>
-        </section>
-      </div>
-    </main>
+        </div>
+      </section>
+    </div>
   );
 }
