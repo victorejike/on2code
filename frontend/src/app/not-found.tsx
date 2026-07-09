@@ -1,10 +1,21 @@
+import Link from 'next/link';
+
 export default function NotFound() {
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-16 text-slate-100">
-      <div className="mx-auto max-w-3xl rounded-3xl border border-slate-800 bg-slate-900 p-10 text-center shadow-xl shadow-slate-950/40">
-        <h1 className="text-4xl font-semibold">Page not found</h1>
-        <p className="mt-4 text-slate-400">The page you are looking for does not exist yet.</p>
+    <div className="flex items-center justify-center min-h-[70vh] px-6">
+      <div className="text-center space-y-5 max-w-md">
+        <p className="text-8xl font-extrabold text-[#0077cc]">404</p>
+        <h1 className="text-2xl font-extrabold text-gray-900">Page not found</h1>
+        <p className="text-gray-500 text-sm">The page you're looking for doesn't exist or has been moved.</p>
+        <div className="flex gap-3 justify-center flex-wrap">
+          <Link href="/" className="rounded-full bg-[#0077cc] px-6 py-3 text-sm font-bold text-white hover:bg-[#005fa3] transition">
+            Go home
+          </Link>
+          <Link href="/courses" className="rounded-full border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
+            Browse courses
+          </Link>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

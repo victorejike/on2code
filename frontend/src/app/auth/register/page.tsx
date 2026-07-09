@@ -2,8 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -14,17 +18,19 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (form.password !== form.confirm) { setMessage('Passwords do not match.'); return; }
+    if (form.password.length < 8) { setMessage('Password must be at least 8 characters.'); return; }
     setLoading(true); setMessage('');
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
+      const res = await fetch(`${API}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: form.name, email: form.email, password: form.password }),
       });
-      if (!res.ok) { const err = await res.json(); setMessage(err?.message || 'Registration failed.'); return; }
+      if (!res.ok) { const err = await res.json(); setMessage(err?.error || err?.message || 'Registration failed.'); return; }
       const data = await res.json();
       window.localStorage.setItem('on2code_token', data.accessToken);
-      window.location.href = '/dashboard';
+      document.cookie = `on2code_token=${data.accessToken}; path=/; max-age=${60 * 60 * 24}`;
+      router.push('/dashboard');
     } catch { setMessage('Unable to reach the server.'); }
     finally { setLoading(false); }
   };

@@ -1,9 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function LoginPage() {
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+
+function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -15,7 +20,7 @@ export default function LoginPage() {
     setMessage('');
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+      const res = await fetch(`${API}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -23,13 +28,16 @@ export default function LoginPage() {
 
       if (!res.ok) {
         const err = await res.json();
-        setMessage(err?.message || 'Invalid email or password.');
+        setMessage(err?.error || err?.message || 'Invalid email or password.');
         return;
       }
 
       const data = await res.json();
       window.localStorage.setItem('on2code_token', data.accessToken);
-      window.location.href = '/dashboard';
+      // Also set a cookie so Next.js middleware can protect routes
+      document.cookie = `on2code_token=${data.accessToken}; path=/; max-age=${60 * 60 * 24}`;
+      const redirect = searchParams.get('redirect') || '/dashboard';
+      router.push(redirect);
     } catch {
       setMessage('Unable to reach the server. Please try again.');
     } finally {
@@ -62,7 +70,7 @@ export default function LoginPage() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-sm font-semibold text-gray-700">Password</label>
-                <a href="#" className="text-xs text-[#0077cc] hover:underline">Forgot password?</a>
+                <a href="/auth/forgot-password" className="text-xs text-[#0077cc] hover:underline">Forgot password?</a>
               </div>
               <input
                 type="password"
@@ -96,7 +104,7 @@ export default function LoginPage() {
 
           <p className="text-center text-sm text-gray-600">
             Don't have an account?{' '}
-            <Link href="/auth/login" className="font-semibold text-[#0077cc] hover:underline">
+            <Link href="/auth/register" className="font-semibold text-[#0077cc] hover:underline">
               Register for free
             </Link>
           </p>
@@ -110,5 +118,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center">
+        <div className="h-8 w-8 border-2 border-[#0077cc] border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

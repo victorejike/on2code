@@ -1,4 +1,15 @@
 version: '3.9'
+
+# ─── USAGE ────────────────────────────────────────────────────────────────────
+# Start all services:
+#   cd infra && docker-compose up --build
+#
+# IMPORTANT: Before running in production, change these values:
+#   - JWT_SECRET: Use a strong random secret (e.g. openssl rand -hex 32)
+#   - POSTGRES_PASSWORD: Use a strong password
+#   - MINIO credentials
+# ─────────────────────────────────────────────────────────────────────────────
+
 services:
   backend:
     build:
@@ -6,48 +17,81 @@ services:
     ports:
       - '4000:4000'
     environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/on2code
+      - PORT=4000
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/on2code?sslmode=disable
       - REDIS_URL=redis://cache:6379
-      - JWT_SECRET=supersecret
-      - JWT_REFRESH_SECRET=refreshsecret
-      - S3_ENDPOINT=http://minio:9000
-      - S3_BUCKET=on2code
+      # ⚠️  CHANGE THIS IN PRODUCTION — use a strong random secret
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - ALLOWED_ORIGIN=http://localhost:3000
     depends_on:
-      - db
-      - cache
-      - minio
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:4000/api/v1/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   frontend:
     build:
       context: ../frontend
     ports:
       - '3000:3000'
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:4000/api/v1
+      - NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
+      - NEXT_PUBLIC_GITHUB_ORG=on2code-org
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
   db:
     image: postgres:16
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
+      # ⚠️  CHANGE THIS IN PRODUCTION
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: on2code
     volumes:
       - db-data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   cache:
-    image: redis:7
-    restart: always
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+
   minio:
     image: minio/minio
-    command: server /data
+    command: server /data --console-address ":9001"
     ports:
       - '9000:9000'
+      - '9001:9001'
     environment:
+      # ⚠️  CHANGE THESE IN PRODUCTION
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     volumes:
       - minio-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
 volumes:
   db-data:
+  redis-data:
   minio-data:
