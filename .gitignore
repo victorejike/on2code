@@ -1,8 +1,13 @@
-node_modules
-.next
-build
-dist
+node_modules/
+frontend/.next/
+build/
+dist/
 *.exe
+*.tsbuildinfo
+*-build-output.txt
+*-test-output.txt
+*_build_output.txt
+*_test_output.txt
 .DS_Store
 *.env.local
 backend/backend

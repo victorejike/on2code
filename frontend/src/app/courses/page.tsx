@@ -81,7 +81,7 @@ function CoursesContent() {
               className="w-full rounded-xl bg-white/10 border border-white/20 pl-10 pr-10 py-3 text-sm text-white placeholder-white/50 outline-none focus:bg-white/20 focus:border-white/40 transition"
             />
             {query && (
-              <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white text-xl leading-none">×</button>
+              <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-gray-200 text-xl leading-none">×</button>
             )}
           </div>
         </div>

@@ -197,6 +197,15 @@ Sandbox Runner
         │
         ▼
 Unit Tests
+
+10. CURRICULUM
+
+The project includes a full backend engineering curriculum in `curriculum/index.md`.
+
+- `curriculum/index.md` — course overview and module links
+- `curriculum/module-01-foundations.md` through `module-07-capstone-project-and-engineering-showcase.md`
+
+This curriculum supports learning backend engineering with Go, architecture, testing, deployment, production best practices, and a capstone project.
         │
         ▼
 Hidden Tests

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
@@ -10,11 +11,11 @@ type Course = { id: string; slug: string; title: string; subtitle: string; level
 
 const SLIDES = [
   {
-    bg: 'from-[#0a0f24] to-[#04060f]',
-    tag: 'Computer Science',
-    headline: 'Learn to think like a programmer',
-    sub: 'Master algorithms, data structures, and software engineering — from scratch to production.',
-    cta: 'Start learning free',
+    bg: 'from-[#0c1728] to-[#03101c]',
+    tag: 'Go Backend',
+    headline: 'Go from beginner to advanced backend engineering',
+    sub: 'Build production-grade Go services, APIs, testing, deployment, and reusable backend systems.',
+    cta: 'Start the Go course',
     href: '/courses',
     img: '/cs_hero.png',
   },
@@ -51,6 +52,7 @@ const SUBJECTS = ['All', 'Computer Science', 'Web Development', 'Data Science', 
 
 export default function HomePage() {
   const router = useRouter();
+  const { user, logout } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [slide, setSlide] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -94,6 +96,18 @@ export default function HomePage() {
       router.push(`/courses?q=${encodeURIComponent(query.trim())}`);
       setShowResults(false);
     }
+  };
+
+  const goCourse = courses.find((course) =>
+    course.title.toLowerCase().includes('go') || course.subtitle?.toLowerCase().includes('go')
+  );
+
+  const featuredCourse = goCourse ?? {
+    id: 'go-backend-course',
+    slug: 'courses',
+    title: 'Go Backend Engineering – Beginner to Advanced',
+    subtitle: 'Complete the full Go backend course from fundamentals through production-ready architecture and deployment.',
+    level: 'Full program',
   };
 
   const s = SLIDES[slide];
@@ -160,7 +174,7 @@ export default function HomePage() {
                       <Link
                         key={c.id}
                         href={`/courses/${c.slug}`}
-                        className="flex items-center gap-3 px-5 py-3.5 hover:bg-gray-50 dark:hover:bg-white/5 transition border-b border-gray-50 dark:border-white/5 last:border-0"
+                        className="flex items-center gap-3 px-5 py-3.5 hover:bg-gray-50 dark:hover:bg-white/4 transition border-b border-gray-50 dark:border-white/5 last:border-0"
                       >
                         <span className="text-lg">📚</span>
                         <div>
@@ -172,7 +186,7 @@ export default function HomePage() {
                   )}
                   <Link
                     href={`/courses?q=${encodeURIComponent(query)}`}
-                    className="block px-5 py-3 text-xs font-semibold text-[#0077cc] hover:bg-blue-50 dark:hover:bg-white/5 transition border-t border-gray-100 dark:border-white/10"
+                    className="block px-5 py-3 text-xs font-semibold text-[#0077cc] hover:bg-blue-50 dark:hover:bg-white/4 transition border-t border-gray-100 dark:border-white/10"
                   >
                     See all results for "{query}" →
                   </Link>
@@ -249,7 +263,7 @@ export default function HomePage() {
             { value: '120+', label: 'Hours of content' },
             { value: '95%', label: 'Completion rate' },
           ].map(s => (
-            <div key={s.label} className="group p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-white/5 transition-all duration-300">
+            <div key={s.label} className="group p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-white/4 transition-all duration-300">
               <p className="text-4xl font-extrabold text-[#0077cc] dark:text-[#0088ff] group-hover:scale-105 transition-transform duration-300">{s.value}</p>
               <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400 font-medium">{s.label}</p>
             </div>
@@ -329,11 +343,20 @@ export default function HomePage() {
           <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">Ready to start coding?</h2>
           <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto text-sm sm:text-base leading-relaxed">Join thousands of learners building real skills with On2Code's structured programs.</p>
           <div className="flex justify-center gap-4 flex-wrap pt-2">
-            <Link href="/auth/register" className="rounded-full bg-[#0077cc] hover:bg-[#005fa3] px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#0077cc]/20 active:scale-95 transition-all duration-200">
-              Create a free account
-            </Link>
-            <Link href="/courses" className="rounded-full border border-gray-300 dark:border-white/10 hover:border-gray-400 dark:hover:border-white/30 px-8 py-3.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 active:scale-95 transition-all duration-200">
-              Explore courses
+            {user ? (
+              <button
+                onClick={logout}
+                className="rounded-full bg-[#e11d48] hover:bg-[#be123c] px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#e11d48]/20 active:scale-95 transition-all duration-200"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link href="/auth/register" className="rounded-full bg-[#0077cc] hover:bg-[#005fa3] px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#0077cc]/20 active:scale-95 transition-all duration-200">
+                Create a free account
+              </Link>
+            )}
+            <Link href={user ? '/courses' : '/courses'} className="rounded-full border border-gray-300 dark:border-white/10 hover:border-gray-400 dark:hover:border-white/30 px-8 py-3.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/4 active:scale-95 transition-all duration-200">
+              {user ? 'Continue learning' : 'Explore courses'}
             </Link>
           </div>
         </div>

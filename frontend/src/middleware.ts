@@ -6,6 +6,7 @@ const PROTECTED_PREFIXES = [
   '/profile',
   '/admin',
   '/instructor',
+  '/curriculum',
 ];
 
 // Routes that should redirect logged-in users away (e.g. login page)

@@ -63,8 +63,8 @@ export default async function CoursePage({ params }: { params: { slug: string } 
       <section className="bg-[#1a1a1a] text-white px-6 py-14">
         <div className="mx-auto max-w-7xl grid gap-10 lg:grid-cols-[1fr_360px]">
           <div className="space-y-5">
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-              <Link href="/courses" className="hover:text-white">Courses</Link>
+              <div className="flex items-center gap-2 text-xs text-gray-400">
+              <Link href="/courses" className="hover:text-gray-200 dark:hover:text-gray-200">Courses</Link>
               <span>/</span>
               <span className="text-gray-300 truncate">{course.title}</span>
             </div>

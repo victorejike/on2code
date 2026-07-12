@@ -3,14 +3,17 @@
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 type Course = { id: string; slug: string; title: string; subtitle: string };
 
+type NavItem = { label: string; href: string };
+
 export default function NavBar() {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const { user, loading, logout } = useAuth();
   const [query, setQuery] = useState('');
   const [courses, setCourses] = useState<Course[]>([]);
   const [results, setResults] = useState<Course[]>([]);
@@ -20,6 +23,21 @@ export default function NavBar() {
   const [scrolled, setScrolled] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const searchRef = useRef<HTMLDivElement>(null);
+
+  const navItems: NavItem[] = [
+    { label: 'Courses', href: '/courses' },
+    ...(user?.hasActiveSubscription ? [{ label: 'Curriculum', href: '/curriculum' }] : []),
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Leaderboard', href: '/leaderboard' },
+  ];
+
+  const mobileItems: NavItem[] = [
+    { label: 'Courses', href: '/courses' },
+    ...(user?.hasActiveSubscription ? [{ label: 'Curriculum', href: '/curriculum' }] : []),
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Leaderboard', href: '/leaderboard' },
+    { label: 'Admin', href: '/admin' },
+  ];
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains('dark') || 
@@ -44,14 +62,6 @@ export default function NavBar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  useEffect(() => {
-    const token = localStorage.getItem('on2code_token');
-    if (!token) return;
-    fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.user) setUser(d.user); })
-      .catch(() => {});
-  }, [pathname]);
 
   useEffect(() => {
     fetch(`${API}/courses`)
@@ -87,9 +97,7 @@ export default function NavBar() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('on2code_token');
-    setUser(null);
-    router.push('/');
+    logout();
   };
 
   const isLearn = pathname?.includes('/learn');
@@ -161,12 +169,12 @@ export default function NavBar() {
 
         {/* Desktop nav */}
         <nav className="hidden lg:flex items-center gap-1 text-sm font-medium ml-auto">
-          {[['Courses', '/courses'], ['Dashboard', '/dashboard'], ['Leaderboard', '/leaderboard']].map(([label, href]) => (
+          {navItems.map(({ label, href }) => (
             <Link key={href} href={href}
               className={`px-3 py-1.5 rounded-lg transition-colors ${
                 pathname === href
                   ? 'bg-[#0077cc]/10 text-[#0077cc] dark:bg-[#0077cc]/20'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/8 hover:text-gray-900 dark:hover:text-white'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/4 hover:text-gray-900 dark:hover:text-gray-100'
               }`}>
               {label}
             </Link>
@@ -179,7 +187,7 @@ export default function NavBar() {
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen(o => !o)}
-                className="flex items-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-1.5 hover:bg-gray-50 dark:hover:bg-white/10 transition shadow-sm"
+                className="flex items-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-1.5 hover:bg-gray-50 dark:hover:bg-white/4 transition shadow-sm"
               >
                 <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-[#0077cc] to-[#005fa3] flex items-center justify-center text-white text-xs font-bold">
                   {(user.name || user.email)[0].toUpperCase()}
@@ -206,7 +214,7 @@ export default function NavBar() {
             </div>
           ) : (
             <>
-              <Link href="/auth/login" className="hidden sm:inline-flex text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/8 transition">
+              <Link href="/auth/login" className="hidden sm:inline-flex text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/4 transition">
                 Sign in
               </Link>
               <Link href="/auth/register" className="inline-flex rounded-xl bg-[#0077cc] px-4 py-2 text-sm font-semibold text-white hover:bg-[#005fa3] transition shadow-sm shadow-[#0077cc]/25">
@@ -218,7 +226,7 @@ export default function NavBar() {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-gray-50 dark:hover:bg-white/10 transition shadow-sm text-gray-600 dark:text-gray-300"
+            className="p-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-gray-50 dark:hover:bg-white/4 transition shadow-sm text-gray-600 dark:text-gray-300"
             aria-label="Toggle Theme"
           >
             {theme === 'light' ? (
@@ -235,7 +243,7 @@ export default function NavBar() {
           {/* Mobile hamburger */}
           <button
             onClick={() => setMobileOpen(o => !o)}
-            className="lg:hidden ml-1 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/8 transition"
+            className="lg:hidden ml-1 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/4 transition"
             aria-label="Menu"
           >
             <svg className="h-5 w-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -264,18 +272,18 @@ export default function NavBar() {
               />
             </div>
           </form>
-          {[['Courses', '/courses'], ['Dashboard', '/dashboard'], ['Leaderboard', '/leaderboard'], ['Admin', '/admin']].map(([label, href]) => (
-            <Link key={href} href={href} className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/8 transition">{label}</Link>
+          {mobileItems.map(({ label, href }) => (
+            <Link key={href} href={href} className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/4 transition">{label}</Link>
           ))}
           {user ? (
             <>
-              <Link href="/profile" className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/8 transition">Profile</Link>
-              <Link href="/certificates" className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/8 transition">Certificates</Link>
+              <Link href="/profile" className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/4 transition">Profile</Link>
+              <Link href="/certificates" className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/4 transition">Certificates</Link>
               <button onClick={handleLogout} className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition">Sign out</button>
             </>
           ) : (
             <div className="flex gap-2 pt-2">
-              <Link href="/auth/login" className="flex-1 text-center rounded-xl border border-gray-200 dark:border-white/10 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/8 transition">Sign in</Link>
+              <Link href="/auth/login" className="flex-1 text-center rounded-xl border border-gray-200 dark:border-white/10 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/4 transition">Sign in</Link>
               <Link href="/auth/register" className="flex-1 text-center rounded-xl bg-[#0077cc] py-2.5 text-sm font-semibold text-white hover:bg-[#005fa3] transition">Get started</Link>
             </div>
           )}

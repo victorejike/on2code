@@ -49,9 +49,9 @@ export default function ModulePage({ params }: { params: { slug: string; moduleI
       <section className="bg-[#1a1a1a] text-white px-6 py-10">
         <div className="mx-auto max-w-5xl space-y-3">
           <div className="flex items-center gap-2 text-xs text-gray-400">
-            <Link href="/courses" className="hover:text-white transition">Courses</Link>
+            <Link href="/courses" className="hover:text-gray-900 dark:hover:text-gray-200 transition">Courses</Link>
             <span>/</span>
-            <Link href={`/courses/${params.slug}`} className="hover:text-white transition">CS50x</Link>
+            <Link href={`/courses/${params.slug}`} className="hover:text-gray-900 dark:hover:text-gray-200 transition">CS50x</Link>
             <span>/</span>
             <span className="text-gray-300">{module.title}</span>
           </div>
